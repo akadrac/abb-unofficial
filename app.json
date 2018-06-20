@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "sdkVersion": "27.0.0",
+    "name": "The Unofficial Aussie Broadband App",
+    "slug": "abb-unofficial",
+    "privacy": "unlisted",
+    "version": "0.2.0",
+    "orientation": "portrait",
+    "primaryColor": "#00b156"
+  },
+  "splash": {
+    "backgroundColor": "#00b156"
+  }
+}
