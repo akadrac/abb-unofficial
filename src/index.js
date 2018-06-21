@@ -75,7 +75,7 @@ const getABBXML = async (login_username, login_password) => {
   return response.text()
 }
 
-const canUpdate = (lastUpdated) => moment(lastUpdated).add(15, 'm') < moment().tz('Australia/Melbourne') ? true : false
+const useCache = (lastUpdated) => moment(lastUpdated).add(15, 'm') > moment().tz('Australia/Melbourne') ? true : false
 
 export class App extends Component {
   constructor(props) {
@@ -107,7 +107,10 @@ export class App extends Component {
     const { username, password, usage, } = this.state
 
     try {
-      if (canUpdate()) {
+      if (usage && usage.lastUpdated && useCache(usage.lastUpdated)) {
+        console.log('using cached data')
+      }
+      else {
         console.log('getting new data')
         let xml = await getABBXML(username, password)
         let json = await parseXML(xml)
@@ -115,9 +118,6 @@ export class App extends Component {
 
         this.setState({ usage: data })
         await AsyncStorage.setItem('usage', JSON.stringify(data))
-      }
-      else {
-        console.log('using cached data')
       }
 
       this.setState({ isLoggedIn: true, isLoading: false, loginError: false })
