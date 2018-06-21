@@ -2,7 +2,8 @@ import React, { Component } from 'react'
 import { AsyncStorage } from 'react-native'
 
 import xml2js, { parseString } from 'react-native-xml2js'
-import moment from 'moment'
+import moment from 'moment-timezone'
+
 import R from 'ramda'
 
 import LoadingScreen from './containers/LoadingScreen'
@@ -26,13 +27,14 @@ const getRollover = (day) => {
 }
 
 const formatData = (json) => {
+  console.log('formatData')
   const { lastupdated, allowance1_mb, left1, down1, up1, rollover, } = json.usage
 
   console.log(`${lastupdated} ${allowance1_mb} ${left1} ${down1} ${up1} ${rollover}`)
 
   let result = {}
 
-  result.lastUpdated = lastupdated
+  result.lastUpdated = moment.tz(lastupdated, 'Australia/Melbourne')
   result.updateTime = moment().format('h:mm a')
   result.unlimited = (allowance1_mb == 100000000) ? true : false
   result.corp = (allowance1_mb == 0) ? true : false
@@ -52,6 +54,7 @@ const formatData = (json) => {
 }
 
 const parseXML = async (xml) => new Promise((resolve, reject) => {
+  console.log('parseXML')
   let options = {
     explicitArray: false,
     valueProcessors: [xml2js.processors.parseNumbers]
@@ -59,43 +62,20 @@ const parseXML = async (xml) => new Promise((resolve, reject) => {
   parseString(xml, options, (error, result) => (error) ? reject(error) : resolve(result))
 })
 
-const fake = async () => new Promise(resolve => setTimeout(() => resolve(fakeLimited()), 5000))
+const getABBXML = async (login_username, login_password) => {
+  console.log('getABBXML')
+  let usageURL = 'https://my.aussiebroadband.com.au/usage.php?xml=yes'
+  let details = { login_username, login_password }
+  let body = Object.keys(details).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(details[key])).join('&')
+  let method = 'POST'
+  let headers = { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+  let redirect = 'follow'
 
-const fakeUnlimited = () => ({
-  lastUpdated: moment().format('YYYY-MM-DD'),
-  updateTime: moment().format('h:mm a'),
-  unlimited: true,
-  corp: false,
-  nolimit: true,
-  limit: -1,
-  limitRemaining: -1,
-  downloaded: 100,
-  uploaded: 10,
-  daysRemaining: 8,
-  daysPast: 22,
-  endOfPeriod: getRollover(26).format('YYYY-MM-DD'),
-  averageUsage: 5,
-  averageLeft: -1,
-  percentRemaining: -1,
-})
+  let response = await fetch(usageURL, { method, headers, body, redirect, })
+  return response.text()
+}
 
-const fakeLimited = () => ({
-  lastUpdated: moment().format('YYYY-MM-DD'),
-  updateTime: moment().format('h:mm a'),
-  unlimited: false,
-  corp: false,
-  nolimit: false,
-  limit: 1000,
-  limitRemaining: 890,
-  downloaded: 100,
-  uploaded: 10,
-  daysRemaining: 8,
-  daysPast: 22,
-  endOfPeriod: getRollover(26).format('YYYY-MM-DD'),
-  averageUsage: 5,
-  averageLeft: 110,
-  percentRemaining: 89,
-})
+const canUpdate = (lastUpdated) => moment(lastUpdated).add(15, 'm') < moment().tz('Australia/Melbourne') ? true : false
 
 export class App extends Component {
   constructor(props) {
@@ -124,25 +104,26 @@ export class App extends Component {
     console.log('refresh')
     this.setState({ isLoading: true })
 
-    const { username: login_username, password: login_password, } = this.state
+    const { username, password, usage, } = this.state
 
     try {
-      let usageURL = 'https://my.aussiebroadband.com.au/usage.php?xml=yes'
-      let details = { login_username, login_password }
-      let body = Object.keys(details).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(details[key])).join('&')
-      let method = 'POST'
-      let headers = { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-      let redirect = 'follow'
+      if (canUpdate()) {
+        console.log('getting new data')
+        let xml = await getABBXML(username, password)
+        let json = await parseXML(xml)
+        let data = formatData(json)
 
-      let response = await fetch(usageURL, { method, headers, body, redirect, })
-      let xml = await response.text()
-      let json = await parseXML(xml)
-      let usage = formatData(json)
+        this.setState({ usage: data })
+        await AsyncStorage.setItem('usage', JSON.stringify(data))
+      }
+      else {
+        console.log('using cached data')
+      }
 
-      this.setState({ usage, isLoggedIn: true, isLoading: false, loginError: false })
+      this.setState({ isLoggedIn: true, isLoading: false, loginError: false })
     }
     catch (error) {
-      console.log('login failed')
+      console.log(error)
       this.setState({ isLoading: false, isLoginError: true })
     }
   }
@@ -158,24 +139,21 @@ export class App extends Component {
     console.log('logout')
     try {
       console.log(`Storage - Remove`)
-      await AsyncStorage.multiRemove(['username', 'password'])
+      await AsyncStorage.multiRemove(['username', 'password', 'usage'])
       this.setState({ isLoggedIn: false, isAppReady: false, username: undefined, password: undefined })
     } catch (error) {
       console.log('failed to remove items from store')
     }
   }
-
-  onLoginAnimationCompleted = () => this.setState({ isAppReady: true })
-  setUsername = username => this.setState({ username })
-  setPassword = password => this.setState({ password })
-
-  async componentDidMount() {
+  
+  componentDidMount = async () => {
     console.log('componentDidMount')
     try {
-      let result = await AsyncStorage.multiGet(['username', 'password'])
+      let result = await AsyncStorage.multiGet(['username', 'password', 'usage'])
       let map = result.map((v, i, a) => R.objOf(a[i][0], a[i][1]))
       let obj = Object.assign({}, ...map)
       if (obj.username != null && obj.password != null) {
+        obj.usage = JSON.parse(obj.usage)
         this.setState(obj)
         await this.refresh()
         if (this.state.isLoggedIn) {
@@ -189,6 +167,10 @@ export class App extends Component {
       console.log('failed to add items to store')
     }
   }
+
+  onLoginAnimationCompleted = () => this.setState({ isAppReady: true })
+  setUsername = username => this.setState({ username })
+  setPassword = password => this.setState({ password })
 
   render() {
     const { login, logout, refresh, onLoginAnimationCompleted, setUsername, setPassword, } = this
