@@ -98,6 +98,7 @@ export default class HomeScreen extends Component {
               onPress={logout}
               buttonStyle={styles.buttonLogout}
               textStyle={styles.buttonText}
+              rippleBackground={'white'}
             />
           </View>
           <View style={styles.buttonInstance}>

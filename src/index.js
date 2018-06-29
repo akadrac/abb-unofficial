@@ -30,12 +30,10 @@ const formatData = (json) => {
   console.log('formatData')
   const { lastupdated, allowance1_mb, left1, down1, up1, rollover, } = json.usage
 
-  console.log(`${lastupdated} ${allowance1_mb} ${left1} ${down1} ${up1} ${rollover}`)
-
   let result = {}
 
   result.lastUpdated = moment.tz(lastupdated, 'Australia/Melbourne')
-  result.updateTime = moment().format('h:mm a')
+  result.updateTime = result.lastUpdated.local().format('h:mm a')
   result.unlimited = (allowance1_mb == 100000000) ? true : false
   result.corp = (allowance1_mb == 0) ? true : false
   result.nolimit = (result.unlimited || result.corp) ? true : false
@@ -91,8 +89,8 @@ export class App extends Component {
       isStarting: true, // delay rendering until storage retrieved
       isAppReady: false, // Has the app completed the login animation?
       isLoggedIn: false, // Is the user authenticated?
-      isLoading: false, // Is the user loggingIn/signinUp?
-      isLoginError: false, // error occured during login
+      isLoading: false, // Is the user loggingIn?
+      isLoginError: false, // An error occured during login
       username: undefined,
       password: undefined,
       usage: {},
@@ -101,17 +99,17 @@ export class App extends Component {
 
   // this handles both the login and xml parsing (only way to know if the login worked)
   refresh = async () => {
-    console.log('refresh')
+    console.log('-refresh')
     this.setState({ isLoading: true })
 
     const { username, password, usage, } = this.state
 
     try {
       if (usage && usage.lastUpdated && useCache(usage.lastUpdated)) {
-        console.log('using cached data')
+        console.log('--using cached data')
       }
       else {
-        console.log('getting new data')
+        console.log('--getting new data')
         let xml = await getABBXML(username, password)
         let json = await parseXML(xml)
         let data = formatData(json)
@@ -123,29 +121,33 @@ export class App extends Component {
       this.setState({ isLoggedIn: true, isLoading: false, loginError: false })
     }
     catch (error) {
-      console.log(error)
+      console.log('--error logging in')
       this.setState({ isLoading: false, isLoginError: true })
     }
   }
 
   login = async (username, password, ) => {
-    console.log('login')
-    await AsyncStorage.multiSet([['username', username], ['password', password]])
-    console.log(`Storage - Set - ${username}`)
-    await this.refresh()
+    console.log('-login')
+    try {
+      await AsyncStorage.multiSet([['username', username], ['password', password]])
+      console.log(`--Storage - Set - ${username}`)
+      await this.refresh()
+    } catch (error) {
+      console.log('--failed to add items to store')
+    }
   }
 
   logout = async () => {
-    console.log('logout')
+    console.log('-logout')
     try {
-      console.log(`Storage - Remove`)
+      console.log(`--Storage - Remove`)
       await AsyncStorage.multiRemove(['username', 'password', 'usage'])
       this.setState({ isLoggedIn: false, isAppReady: false, username: undefined, password: undefined })
     } catch (error) {
-      console.log('failed to remove items from store')
+      console.log('--failed to remove items from store')
     }
   }
-  
+
   componentDidMount = async () => {
     console.log('componentDidMount')
     try {

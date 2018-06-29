@@ -1,14 +1,25 @@
 {
   "expo": {
-    "sdkVersion": "27.0.0",
-    "name": "The Unofficial Aussie Broadband App",
+    "sdkVersion": "28.0.0",
+    "name": "ABB Unofficial",
     "slug": "abb-unofficial",
-    "privacy": "unlisted",
-    "version": "0.2.0",
+    "icon": "./icons/app-icon.png",
+    "privacy": "public",
+    "version": "0.3.0",
     "orientation": "portrait",
-    "primaryColor": "#00b156"
-  },
-  "splash": {
-    "backgroundColor": "#00b156"
+    "primaryColor": "#00b156",
+    "ios": {
+      "bundleIdentifier": "au.id.drac.abbunofficial"
+    },
+    "android": {
+      "package": "au.id.drac.abbunofficial",
+      "adaptiveIcon": {
+        "foregroundImage": "./icons/android-icon.png",
+        "backgroundColor": "#00b156"
+      }
+    },
+    "splash": {
+      "backgroundColor": "#00b156"
+    }
   }
 }

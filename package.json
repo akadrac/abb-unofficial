@@ -1,6 +1,6 @@
 {
   "name": "abb-unofficial",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "devDependencies": {
     "jest-expo": "~27.0.0",
@@ -19,13 +19,13 @@
     "preset": "jest-expo"
   },
   "dependencies": {
-    "expo": "^27.0.1",
-    "moment": "^2.22.2",
-    "moment-timezone": "^0.5.20",
-    "ramda": "^0.25.0",
+    "expo": "28.0.0",
+    "moment": "2.22.2",
+    "moment-timezone": "0.5.20",
+    "ramda": "0.25.0",
     "react": "16.3.1",
-    "react-native": "~0.55.2",
-    "react-native-animatable": "^1.3.0",
-    "react-native-xml2js": "^1.0.3"
+    "react-native": "https://github.com/expo/react-native/archive/sdk-28.0.0.tar.gz",
+    "react-native-animatable": "1.3.0",
+    "react-native-xml2js": "1.0.3"
   }
 }

@@ -78,7 +78,6 @@ export default class AuthScreen extends Component {
           style={styles.bottom}
         >
           <LoginForm
-            ref={(ref) => this.formRef = ref}
             username={username}
             password={password}
             setUsername={setUsername}

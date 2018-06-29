@@ -13,30 +13,31 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     alignSelf: 'stretch',
     justifyContent: 'center',
-    borderColor: 'rgba(0, 0, 0, 0.1)'
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    backgroundColor: 'grey'
   },
   spinner: {
-    height: 26
+    height: 26,
   },
   text: {
     textAlign: 'center',
     fontWeight: '400',
-    color: 'white'
-  }
+    color: 'grey',
+  },
 })
 
-const CustomButton = ({ onPress, isEnabled, isLoading, text, buttonStyle, textStyle, ...otherProps }) => {
-  const onButtonPress = isEnabled && !isLoading ? onPress : () => null
-
-  return (
-    <View {...otherProps}>
-      <TouchableView onPress={onButtonPress} style={[styles.button, buttonStyle]}>
-        {(isLoading) && <ActivityIndicator style={styles.spinner} color={'grey'} />}
-        {(!isLoading) && <Text style={[styles.text, textStyle]}>{text}</Text>}
-      </TouchableView>
-    </View>
-  )
-}
+const CustomButton = ({ onPress, isEnabled, isLoading, text, buttonStyle, textStyle, rippleBackground, ...otherProps }) =>
+  <View {...otherProps}>
+    <TouchableView
+      onPress={isEnabled && !isLoading ? onPress : f => f}
+      style={[styles.button, buttonStyle]}
+      rippleBackground={rippleBackground}
+    >
+      {isLoading
+        ? <ActivityIndicator style={styles.spinner} color={'grey'} />
+        : <Text style={[styles.text, textStyle]}>{text}</Text>}
+    </TouchableView>
+  </View>
 
 CustomButton.propTypes = {
   onPress: PropTypes.func,
@@ -44,13 +45,15 @@ CustomButton.propTypes = {
   isLoading: PropTypes.bool,
   text: PropTypes.string,
   buttonStyle: PropTypes.any,
-  textStyle: PropTypes.any
+  textStyle: PropTypes.any,
+  rippleBackground: PropTypes.string,
 }
 
 CustomButton.defaultProps = {
-  onPress: () => null,
+  onPress: f => f,
   isEnabled: true,
-  isLoading: false
+  isLoading: false,
+  rippleBackground: 'grey',
 }
 
 export default CustomButton
