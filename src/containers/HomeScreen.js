@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { StyleSheet, View, Image, } from 'react-native'
+import { StyleSheet, } from 'react-native'
+import { View, Image, } from 'react-native-animatable'
 import { Constants } from 'expo'
 
 import imgLogo from './../images/logo-new.png'
@@ -67,12 +68,6 @@ export default class HomeScreen extends Component {
     isLoading: PropTypes.bool.isRequired,
   }
 
-  // componentDidUpdate = (prevProps, prevState, snapshot, ) => {
-  //   if (prevProps.usage == this.props.usage) {
-
-  //   }
-  // }
-
   render() {
     console.log('HomeScreen render')
     const { logout, refresh, usage, isLoading } = this.props
@@ -82,16 +77,15 @@ export default class HomeScreen extends Component {
         <View style={styles.statusBar} />
         <View style={styles.top}>
           <Image
-            animation={'bounceIn'}
+            animation={'zoomIn'}
             duration={1200}
             delay={200}
-            ref={(ref) => this.logoImgRef = ref}
             style={styles.logoImg}
             source={imgLogo}
           />
         </View>
         <UsageBlock style={styles.center} usage={usage} />
-        <View style={styles.bottom}>
+        <View style={styles.bottom} animation={'zoomIn'} duration={600} delay={400}>
           <View style={styles.buttonInstance}>
             <CustomButton
               text={'Logout'}

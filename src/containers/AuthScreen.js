@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { KeyboardAvoidingView, Platform, StyleSheet, UIManager } from 'react-native'
+import { KeyboardAvoidingView, StyleSheet } from 'react-native'
 import { Image, View } from 'react-native-animatable'
 import { Constants } from 'expo'
 
@@ -8,8 +8,6 @@ import imgLogo from './../images/logo-new.png'
 import metrics from './../config/metrics'
 
 import LoginForm from './LoginForm'
-
-if (Platform.OS === 'android') UIManager.setLayoutAnimationEnabledExperimental(true)
 
 const styles = StyleSheet.create({
   container: {

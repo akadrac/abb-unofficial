@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { AsyncStorage } from 'react-native'
+import { SecureStore } from 'expo'
 
 import xml2js, { parseString } from 'react-native-xml2js'
 import moment from 'moment-timezone'
@@ -129,7 +130,8 @@ export class App extends Component {
   login = async (username, password, ) => {
     console.log('-login')
     try {
-      await AsyncStorage.multiSet([['username', username], ['password', password]])
+      await SecureStore.setItemAsync('username', username)
+      await SecureStore.setItemAsync('password', password)
       console.log(`--Storage - Set - ${username}`)
       await this.refresh()
     } catch (error) {
@@ -142,6 +144,8 @@ export class App extends Component {
     try {
       console.log(`--Storage - Remove`)
       await AsyncStorage.multiRemove(['username', 'password', 'usage'])
+      await SecureStore.deleteItemAsync('username')
+      await SecureStore.deleteItemAsync('password')
       this.setState({ isLoggedIn: false, isAppReady: false, username: undefined, password: undefined })
     } catch (error) {
       console.log('--failed to remove items from store')
@@ -151,12 +155,11 @@ export class App extends Component {
   componentDidMount = async () => {
     console.log('componentDidMount')
     try {
-      let result = await AsyncStorage.multiGet(['username', 'password', 'usage'])
-      let map = result.map((v, i, a) => R.objOf(a[i][0], a[i][1]))
-      let obj = Object.assign({}, ...map)
-      if (obj.username != null && obj.password != null) {
-        obj.usage = JSON.parse(obj.usage)
-        this.setState(obj)
+      let usage = JSON.parse(await AsyncStorage.getItem('usage'))
+      let username = await SecureStore.getItemAsync('username')
+      let password = await SecureStore.getItemAsync('password')
+      if (username != null && password != null) {
+        this.setState({usage, username, password})
         await this.refresh()
         if (this.state.isLoggedIn) {
           this.setState({ isAppReady: true })
